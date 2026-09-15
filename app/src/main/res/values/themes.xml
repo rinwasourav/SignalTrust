@@ -1,0 +1,5 @@
+<resources>
+<style name="Theme.SignalTrust" parent="Theme.Material3.DayNight.NoActionBar">
+    <item name="android:fontFamily">sans</item><item name="android:colorAccent">@color/blue_700</item><item name="android:navigationBarColor">@color/blue_900</item>
+</style>
+</resources>

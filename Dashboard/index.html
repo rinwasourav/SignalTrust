@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignalTrust Admin Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f3f7fb;
+      color: #172033;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: #17365d;
+      color: white;
+      padding: 24px 16px;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-bottom: 32px;
+    }
+
+    .nav-button {
+      width: 100%;
+      display: block;
+      border: 0;
+      background: transparent;
+      color: white;
+      text-align: left;
+      padding: 13px 14px;
+      margin: 5px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+      background: #2b5d9a;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      padding: 10px 12px;
+      border: 1px solid #ccd6e0;
+      border-radius: 7px;
+      background: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .toolbar input:focus {
+      border-color: #2b5d9a;
+    }
+
+    #connection-status {
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    #last-updated {
+      font-size: 12px;
+      color: #68758a;
+    }
+
+    /* Drawer Styles */
+    .drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 5;
+    }
+
+    .report-drawer {
+      position: fixed;
+      right: -430px;
+      top: 0;
+      width: 420px;
+      max-width: 92vw;
+      height: 100vh;
+      background: white;
+      padding: 26px;
+      z-index: 6;
+      box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
+      transition: right 0.25s ease;
+      overflow-y: auto;
+    }
+
+    .report-drawer.open {
+      right: 0;
+    }
+
+    .drawer-backdrop.open {
+      display: block;
+    }
+
+    .close-button {
+      float: right;
+      border: 0;
+      background: transparent;
+      font-size: 28px;
+      cursor: pointer;
+      color: #17365d;
+    }
+
+    .drawer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e5eaf0;
+    }
+
+    .small-button {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .warning-button {
+      background: #8a5a00;
+    }
+
+    .danger-button {
+      background: #a32121;
+    }
+
+    .success-button {
+      background: #176b4d;
+    }
+
+    .main {
+      flex: 1;
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #17365d;
+    }
+
+    .admin {
+      background: white;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(20, 40, 70, 0.08);
+    }
+
+    .card-label {
+      color: #68758a;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      color: #17365d;
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(20, 40, 70, 0.08);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #17365d;
+      font-size: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px 8px;
+      border-bottom: 1px solid #e5eaf0;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      color: #68758a;
+      font-weight: normal;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .high {
+      color: #a32121;
+      background: #fde8e8;
+    }
+
+    .medium {
+      color: #8a5a00;
+      background: #fff2cc;
+    }
+
+    .low {
+      color: #176b4d;
+      background: #dff4e9;
+    }
+
+    .graph {
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fbfe;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .node {
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 10px;
+      font-weight: bold;
+      z-index: 2;
+      padding: 6px;
+    }
+
+    .node.red {
+      background: #f7b2b2;
+      border: 3px solid #a32121;
+    }
+
+    .node.orange {
+      background: #ffe0a3;
+      border: 3px solid #b26a00;
+    }
+
+    .node.green {
+      background: #b9e8ce;
+      border: 3px solid #176b4d;
+    }
+
+    .node-1 { left: 12%; top: 36%; }
+    .node-2 { left: 42%; top: 15%; }
+    .node-3 { left: 42%; top: 60%; }
+    .node-4 { right: 12%; top: 36%; }
+
+    .line {
+      height: 3px;
+      background: #9aa8b8;
+      position: absolute;
+      transform-origin: left center;
+      z-index: 1;
+    }
+
+    .line-1 {
+      left: 27%;
+      top: 48%;
+      width: 18%;
+      transform: rotate(-25deg);
+    }
+
+    .line-2 {
+      left: 27%;
+      top: 54%;
+      width: 18%;
+      transform: rotate(25deg);
+    }
+
+    .line-3 {
+      left: 57%;
+      top: 48%;
+      width: 20%;
+      transform: rotate(-12deg);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .button {
+      background: #2b5d9a;
+      color: white;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .cards,
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .sidebar {
+        width: 180px;
+      }
+
+      .cards,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">SignalTrust</div>
+      <div class="subtitle">Admin Security Portal</div>
+
+      <button class="nav-button active" onclick="showSection('overview', this)">
+        Overview
+      </button>
+
+      <button class="nav-button" onclick="showSection('reports', this)">
+        Reports
+      </button>
+
+      <button class="nav-button" onclick="showSection('graph', this)">
+        Fraud Graph
+      </button>
+
+      <button class="nav-button" onclick="showSection('campaigns', this)">
+        Campaigns
+      </button>
+
+      <button class="nav-button" onclick="showSection('businesses', this)">
+        Businesses
+      </button>
+
+      <button class="nav-button" onclick="showSection('audit', this)">
+        Audit Logs
+      </button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="page-title">Overview</h1>
+          <p>
+            <span id="connection-status">● Connecting...</span>
+            <span id="last-updated">Last updated: --</span>
+          </p>
+        </div>
+
+        <div class="admin">Security Admin ▾</div>
+      </div>
+
+      <section id="overview" class="section active">
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">Total reports</div>
+            <div class="card-value" id="total-reports">0</div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">High-risk numbers</div>
+            <div class="card-value" id="high-risk">0</div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">Fraud campaigns</div>
+            <div class="card-value" id="campaign-count">0</div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">Verified businesses</div>
+            <div class="card-value" id="verified-businesses">0</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search number or category..."
+            oninput="applyFilters()"
+          />
+
+          <select id="risk-filter" onchange="applyFilters()">
+            <option value="">All risk levels</option>
+            <option value="HIGH">High risk</option>
+            <option value="MEDIUM">Medium risk</option>
+            <option value="LOW">Low risk</option>
+          </select>
+
+          <select id="category-filter" onchange="applyFilters()">
+            <option value="">All categories</option>
+            <option value="OTP fraud">OTP fraud</option>
+            <option value="Bank impersonation">Bank impersonation</option>
+            <option value="Spam">Spam</option>
+            <option value="Delivery scam">Delivery scam</option>
+          </select>
+
+          <button class="button" onclick="loadDashboard()">↻ Refresh</button>
+          <button class="button" onclick="exportReports()">Export CSV</button>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <h2>Recent reports</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Number</th>
+                  <th>Category</th>
+                  <th>Risk Level</th>
+                  <th>Score</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody id="reports-body">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h2>Risk distribution</h2>
+            <p>Low risk: 60%</p>
+            <p>Medium risk: 25%</p>
+            <p>High risk: 15%</p>
+            <div style="height: 18px; display: flex; border-radius: 9px; overflow: hidden;">
+              <div style="width: 60%; background: #49a982;"></div>
+              <div style="width: 25%; background: #e7b34d;"></div>
+              <div style="width: 15%; background: #cf5c5c;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Active fraud cluster</h2>
+
+          <div class="graph">
+            <div class="line line-1"></div>
+            <div class="line line-2"></div>
+            <div class="line line-3"></div>
+
+            <div class="node red node-1">Scam<br>0003</div>
+            <div class="node red node-2">Scam<br>0004</div>
+            <div class="node orange node-3">Review<br>0005</div>
+            <div class="node green node-4">Verified<br>business</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reports" class="section">
+        <div class="panel">
+          <h2>Report management</h2>
+          <p>Review, confirm, reject, or expire community reports.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Masked number</th>
+                <th>Category</th>
+                <th>Reports</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>****0003</td>
+                <td>OTP fraud</td>
+                <td>10</td>
+                <td><span class="badge high">HIGH</span></td>
+                <td><button class="button" onclick="alert('Report opened for review')">Review</button></td>
+              </tr>
+
+              <tr>
+                <td>****0002</td>
+                <td>Possible spam</td>
+                <td>3</td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td><button class="button" onclick="alert('Report marked for investigation')">Investigate</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="graph" class="section">
+        <div class="panel">
+          <h2>Fraud contact graph</h2>
+          <p>Red numbers are high risk. Orange numbers are under review. Green nodes are verified organizations.</p>
+
+          <div class="graph" style="height: 440px;">
+            <div class="line line-1"></div>
+            <div class="line line-2"></div>
+            <div class="line line-3"></div>
+
+            <div class="node red node-1">Scam<br>0003</div>
+            <div class="node red node-2">Scam<br>0004</div>
+            <div class="node orange node-3">Review<br>0005</div>
+            <div class="node green node-4">Verified<br>business</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="campaigns" class="section">
+        <div class="panel">
+          <h2>Fraud campaigns</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Numbers</th>
+                <th>Reports</th>
+                <th>Risk</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Fake Bank OTP Group 04</td>
+                <td>18</td>
+                <td>94</td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>Under investigation</td>
+              </tr>
+
+              <tr>
+                <td>Loan Promotion Cluster</td>
+                <td>9</td>
+                <td>36</td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>Review</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="businesses" class="section">
+        <div class="panel">
+          <h2>Business verification</h2>
+          <p>Approve legitimate organizations and their official phone numbers.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Organization</th>
+                <th>Number</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Demo Hospital</td>
+                <td>****0001</td>
+                <td><span class="badge low">VERIFIED</span></td>
+                <td><button class="button" onclick="alert('Business details opened')">View</button></td>
+              </tr>
+
+              <tr>
+                <td>Demo Bank</td>
+                <td>****0007</td>
+                <td><span class="badge medium">PENDING</span></td>
+                <td><button class="button" onclick="alert('Verification request opened')">Review</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="audit" class="section">
+        <div class="panel">
+          <h2>Audit logs</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Administrator</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Today 15:20</td>
+                <td>analyst01</td>
+                <td>Confirmed report ****0003</td>
+              </tr>
+
+              <tr>
+                <td>Today 15:18</td>
+                <td>verifier02</td>
+                <td>Approved Demo Hospital</td>
+              </tr>
+
+              <tr>
+                <td>Today 15:10</td>
+                <td>admin01</td>
+                <td>Changed risk threshold</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
+
+  <aside id="report-drawer" class="report-drawer">
+    <button class="close-button" onclick="closeDrawer()">×</button>
+    <h2>Report details</h2>
+    <div id="report-details" style="margin-top: 20px;">
+      Select a report to view details.
+    </div>
+    <div class="drawer-actions">
+      <button class="button success-button" onclick="updateReportStatus('CONFIRMED')">Confirm</button>
+      <button class="button warning-button" onclick="updateReportStatus('FALSE_POSITIVE')">False Positive</button>
+      <button class="button danger-button" onclick="updateReportStatus('OUTDATED')">Mark Outdated</button>
+    </div>
+  </aside>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    let allReports = [];
+    let selectedReport = null;
+
+    function showSection(sectionId, button) {
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+      });
+
+      document.getElementById(sectionId).classList.add("active");
+
+      document.querySelectorAll(".nav-button").forEach(item => {
+        item.classList.remove("active");
+      });
+
+      button.classList.add("active");
+
+      const titles = {
+        overview: "Overview",
+        reports: "Reports",
+        graph: "Fraud Graph",
+        campaigns: "Campaigns",
+        businesses: "Businesses",
+        audit: "Audit Logs"
+      };
+
+      document.getElementById("page-title").textContent = titles[sectionId];
+      if (sectionId === 'graph') loadGraph();
+    }
+
+    async function loadDashboard() {
+      try {
+        const statsResponse = await fetch(`${API_BASE}/dashboard/stats`);
+        if (!statsResponse.ok) throw new Error("Backend offline");
+        const stats = await statsResponse.json();
+
+        document.getElementById("total-reports").textContent = stats.total_reports;
+        document.getElementById("high-risk").textContent = stats.high_risk_numbers;
+        document.getElementById("campaign-count").textContent = stats.fraud_campaigns;
+        document.getElementById("verified-businesses").textContent = stats.verified_businesses || 73;
+
+        const reportsResponse = await fetch(`${API_BASE}/dashboard/reports`);
+        allReports = await reportsResponse.json();
+
+        applyFilters();
+        setConnectionStatus(true);
+        document.getElementById("last-updated").textContent = "Last updated: " + new Date().toLocaleTimeString();
+
+        loadGraph();
+      } catch (error) {
+        console.error("Dashboard loading failed:", error);
+        setConnectionStatus(false);
+      }
+    }
+
+    function setConnectionStatus(connected) {
+      const statusEl = document.getElementById("connection-status");
+      if (connected) {
+        statusEl.textContent = "● Live";
+        statusEl.style.color = "#176b4d";
+      } else {
+        statusEl.textContent = "● Backend disconnected";
+        statusEl.style.color = "#a32121";
+      }
+    }
+
+    function applyFilters() {
+      const searchInput = document.getElementById("search-input");
+      const riskFilter = document.getElementById("risk-filter");
+      const categoryFilter = document.getElementById("category-filter");
+
+      if (!searchInput || !riskFilter || !categoryFilter) return;
+
+      const search = searchInput.value.toLowerCase();
+      const risk = riskFilter.value;
+      const category = categoryFilter.value;
+
+      const filtered = allReports.filter(report => {
+        const matchesSearch = report.number.toLowerCase().includes(search) ||
+                              report.category.toLowerCase().includes(search);
+        const matchesRisk = !risk || getRiskLevel(report.risk_score) === risk;
+        const matchesCategory = !category || report.category === category;
+        return matchesSearch && matchesRisk && matchesCategory;
+      });
+
+      renderReports(filtered);
+    }
+
+    function getRiskLevel(score) {
+      if (score >= 75) return "HIGH";
+      if (score >= 40) return "MEDIUM";
+      return "LOW";
+    }
+
+    function getRiskClass(score) {
+      if (score >= 75) return "high";
+      if (score >= 40) return "medium";
+      return "low";
+    }
+
+    function renderReports(reports) {
+      const tableBody = document.getElementById("reports-body");
+      if (!tableBody) return;
+      tableBody.innerHTML = "";
+
+      if (reports.length === 0) {
+        tableBody.innerHTML = "<tr><td colspan='5'>No reports match your filters.</td></tr>";
+        return;
+      }
+
+      reports.forEach(report => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${report.number}</td>
+          <td>${report.category}</td>
+          <td><span class="badge ${getRiskClass(report.risk_score)}">${getRiskLevel(report.risk_score)}</span></td>
+          <td>${report.risk_score}/100</td>
+          <td><button class="button small-button" onclick="openReport(${report.id})">View</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function openReport(reportId) {
+      selectedReport = allReports.find(r => r.id === reportId);
+      if (!selectedReport) return;
+
+      document.getElementById("report-details").innerHTML = `
+        <p><strong>Number:</strong> ${selectedReport.number}</p>
+        <p><strong>Category:</strong> ${selectedReport.category}</p>
+        <p><strong>Status:</strong> <span class="badge">${selectedReport.status || 'PENDING'}</span></p>
+        <p><strong>Risk Score:</strong> ${selectedReport.risk_score}/100</p>
+        <p><strong>Reported At:</strong> ${new Date(selectedReport.created_at).toLocaleString()}</p>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <p><strong>Recommended Action:</strong></p>
+        <ul style="font-size: 13px; color: #68758a; padding-left: 20px;">
+          <li>Verify against known fraud campaigns.</li>
+          <li>Check cluster associations in Fraud Graph.</li>
+          <li>Review user-submitted description.</li>
+        </ul>
+        <br>
+        <button class="button" onclick="showSection('graph', document.querySelector('[onclick*=\\'graph\\']'))">Investigate in Graph</button>
+      `;
+
+      document.getElementById("report-drawer").classList.add("open");
+      document.getElementById("drawer-backdrop").classList.add("open");
+    }
+
+    function closeDrawer() {
+      document.getElementById("report-drawer").classList.remove("open");
+      document.getElementById("drawer-backdrop").classList.remove("open");
+    }
+
+    async function updateReportStatus(status) {
+      if (!selectedReport) return;
+      try {
+        const response = await fetch(`${API_BASE}/admin/reports/${selectedReport.id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Key": "admin-secret-key-123"
+          },
+          body: JSON.stringify({ status })
+        });
+        if (response.ok) {
+          closeDrawer();
+          loadDashboard();
+        } else {
+          alert("Status update failed.");
+        }
+      } catch (e) {
+        alert("Connection error.");
+      }
+    }
+
+    function exportReports() {
+      const rows = [["Number", "Category", "Risk Level", "Score", "Status", "Date"]];
+      allReports.forEach(r => rows.push([r.number, r.category, getRiskLevel(r.risk_score), r.risk_score, r.status, r.created_at]));
+      const csv = rows.map(row => row.map(v => `"${v}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "signaltrust-reports.csv"; a.click();
+    }
+
+    async function loadGraph() {
+      try {
+        const graphResponse = await fetch(`${API_BASE}/dashboard/graph`);
+        const graphData = await graphResponse.json();
+
+        function drawGraph(container, nodes, edges, isOverview = false) {
+          if (!container) return;
+          container.innerHTML = "";
+          container.style.position = "relative";
+
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.style.position = "absolute";
+          svg.style.width = "100%"; svg.style.height = "100%";
+          svg.style.top = "0"; svg.style.left = "0";
+          svg.style.zIndex = "1";
+          container.appendChild(svg);
+
+          const nodePositions = {};
+          const cols = isOverview ? 2 : 4;
+          const spacing = isOverview ? 40 : 22;
+
+          nodes.forEach((node, index) => {
+            const div = document.createElement("div");
+            div.className = `node ${node.risk === 'HIGH' ? 'red' : node.risk === 'MEDIUM' ? 'orange' : 'green'}`;
+            const x = 10 + (index % cols) * spacing;
+            const y = isOverview ? (25 + Math.floor(index / cols) * 45) : (10 + Math.floor(index / cols) * 22);
+
+            div.style.left = `${x}%`;
+            div.style.top = `${y}%`;
+            div.style.zIndex = "2";
+            div.style.cursor = "pointer";
+            div.innerHTML = `${node.label}<br>${isOverview ? node.risk : 'Score: ' + node.score}`;
+            div.onclick = () => alert(`Number: ${node.label}\nRisk: ${node.risk}\nScore: ${node.score}`);
+
+            container.appendChild(div);
+            nodePositions[node.id] = { x, y };
+          });
+
+          edges.forEach(edge => {
+            const start = nodePositions[edge.from];
+            const end = nodePositions[edge.to];
+            if (start && end) {
+              const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+              // Center coordinates (based on node being roughly 72px in a responsive container)
+              // We use percentage offsets that align with the node center
+              const xOffset = isOverview ? 4.5 : 3.5;
+              const yOffset = isOverview ? 8 : 6;
+
+              line.setAttribute("x1", `${start.x + xOffset}%`);
+              line.setAttribute("y1", `${start.y + yOffset}%`);
+              line.setAttribute("x2", `${end.x + xOffset}%`);
+              line.setAttribute("y2", `${end.y + yOffset}%`);
+              line.setAttribute("stroke", "#9AA8B8");
+              line.setAttribute("stroke-width", "2");
+              line.setAttribute("stroke-dasharray", edge.type === 'SMS_LINK' ? "5,5" : "0");
+              svg.appendChild(line);
+            }
+          });
+        }
+
+        drawGraph(document.querySelector("#overview .graph"), graphData.nodes.slice(0, 4), graphData.edges, true);
+        drawGraph(document.querySelector("#graph .graph"), graphData.nodes.slice(0, 16), graphData.edges, false);
+
+      } catch (error) { console.error("Graph loading failed:", error); }
+    }
+
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+
+    loadDashboard();
+    setInterval(loadDashboard, 5000);
+  </script>
+</body>
+</html>

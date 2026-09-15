@@ -1,0 +1,21 @@
+# Android
+app/build/
+build/
+.gradle/
+local.properties
+*.iml
+.idea/
+.kotlin/
+
+# Python
+Backend/__pycache__/
+Backend/.venv/
+Backend/signaltrust.db
+.pytest_cache/
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Dashboard
+Dashboard/.DS_Store
